@@ -1,3 +1,4 @@
+
 #include "display.h"
 #include "config.h"
 #include <Arduino_GFX_Library.h>
@@ -111,6 +112,11 @@ static void jd9853RegInit() {
 }
 
 void displayInit() {
+  // Backlight-Pin: bei dieser Board-Variante vermutlich separat gesteuert
+  // (nicht fest verdrahtet). GPIO48 ist der wahrscheinlichste Kandidat.
+  pinMode(48, OUTPUT);
+  digitalWrite(48, HIGH);
+
   gfx->begin();
   jd9853RegInit();
   gfx->fillScreen(BLACK);
