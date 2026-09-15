@@ -54,6 +54,16 @@ static String berlinTimeString(time_t utc, bool withDate) {
   return String(buf);
 }
 
+// Deutsches Datum (Berlin-Zeitzone), separat von der Uhrzeit
+static String berlinDateString(time_t utc) {
+  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+  tzset();
+  struct tm* t = localtime(&utc);
+  char buf[8];
+  snprintf(buf, sizeof(buf), "%02d.%02d.", t->tm_mday, t->tm_mon + 1);
+  return String(buf);
+}
+
 static bool getLongitudeForIata(const String& iata, float& outLon) {
   if (tzCache.valid && tzCache.iata.equalsIgnoreCase(iata)) {
     outLon = tzCache.longitude;
@@ -218,7 +228,7 @@ static void showScreenNextFlight(time_t now) {
     return;
   }
   String line1 = "Naechster Flug: " + next.flightNumber;
-  String line2 = next.depIata + "-" + next.arrIata + " " + berlinTimeString(next.startUtc, true) + " DE";
+  String line2 = "Landung in " + next.arrIata + " um " + berlinTimeString(next.endUtc, false) + " DE";
   displayMessage(line1, line2, COLOR_WHITE);
 }
 
@@ -260,7 +270,7 @@ static void showScreenFlightAfterNextArrival(time_t now) {
     return;
   }
   String line1 = "Landung in " + afterNext.arrIata;
-  String line2 = "um " + berlinTimeString(afterNext.endUtc, true) + " DE";
+  String line2 = "am " + berlinDateString(afterNext.endUtc) + " um " + berlinTimeString(afterNext.endUtc, false) + " DE";
   displayMessage(line1, line2, COLOR_WHITE);
 }
 
