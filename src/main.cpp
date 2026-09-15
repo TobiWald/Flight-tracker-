@@ -10,6 +10,7 @@
 
 static Preferences prefs;
 static String rosterUrl;
+static String userName;
 static String homeBase;
 
 static std::vector<FlightEvent> flights;
@@ -33,12 +34,15 @@ static String utcTimeString(time_t nowUtc) {
 static void loadOrRequestConfig() {
   prefs.begin("flighttrk", false);
   rosterUrl = prefs.getString("rosterUrl", "");
+  userName  = prefs.getString("userName", "");
   homeBase  = prefs.getString("homeBase", "");
 
   WiFiManager wm;
   WiFiManagerParameter rosterParam("roster", "Lufthansa Dienstplan-Link (ICS)", rosterUrl.c_str(), 300);
+  WiFiManagerParameter nameParam("name", "Dein Vorname", userName.c_str(), 30);
   WiFiManagerParameter baseParam("base", "Heimatflughafen (IATA, z.B. FRA)", homeBase.c_str(), 4);
   wm.addParameter(&rosterParam);
+  wm.addParameter(&nameParam);
   wm.addParameter(&baseParam);
   wm.setConfigPortalTimeout(180);
 
@@ -49,10 +53,12 @@ static void loadOrRequestConfig() {
   }
 
   String enteredUrl = rosterParam.getValue();
+  String enteredName = nameParam.getValue();
   String enteredBase = baseParam.getValue();
   enteredBase.toUpperCase();
 
   if (enteredUrl.length() > 0) { rosterUrl = enteredUrl; prefs.putString("rosterUrl", rosterUrl); }
+  if (enteredName.length() > 0) { userName = enteredName; prefs.putString("userName", userName); }
   if (enteredBase.length() > 0) { homeBase = enteredBase; prefs.putString("homeBase", homeBase); }
 }
 
@@ -118,17 +124,17 @@ static void handleFlightStatus(const FlightEvent& f, time_t now) {
       char buf[8];
       snprintf(buf, sizeof(buf), "%02d:%02d", hh, mm);
 
-      String line1 = String(USER_NAME) + " ist nach " + f.arrIata + " gestartet";
+      String line1 = userName + " ist nach " + f.arrIata + " gestartet";
       String line2 = "noch " + String(buf) + " Std bis Landung";
       displayMessage(line1, line2, TFT_GREEN);
     } else {
       long elapsedMin = (long)difftime(now, f.startUtc) / 60;
       if (elapsedMin <= DELAYED_THRESHOLD_MIN) {
-        String line1 = String(USER_NAME) + "s Flug nach " + f.arrIata;
+        String line1 = userName + "s Flug nach " + f.arrIata;
         String line2 = "ist pünktlich, startet gleich";
         displayMessage(line1, line2, TFT_SKYBLUE);
       } else {
-        String line1 = String(USER_NAME) + "s Flug nach " + f.arrIata;
+        String line1 = userName + "s Flug nach " + f.arrIata;
         String line2 = "ist verspätet (+" + String(elapsedMin) + " Min)";
         displayMessage(line1, line2, TFT_RED);
       }
@@ -143,7 +149,7 @@ static void handleAwayState(const String& currentLocation, time_t now) {
   }
 
   if (awayShowLocation) {
-    String line1 = String(USER_NAME) + " ist gerade in " + currentLocation;
+    String line1 = userName + " ist gerade in " + currentLocation;
     String line2 = "und hat " + utcTimeString(now) + " Uhr (UTC)";
     displayMessage(line1, line2, TFT_SKYBLUE);
   } else {
@@ -151,7 +157,7 @@ static void handleAwayState(const String& currentLocation, time_t now) {
     if (findNextReturnFlight(now, ret)) {
       long hours = (long)difftime(ret.startUtc, now) / 3600;
       if (hours < 0) hours = 0;
-      String line1 = String(USER_NAME) + " fliegt in " + String(hours);
+      String line1 = userName + " fliegt in " + String(hours);
       String line2 = "Stunden zurück";
       displayMessage(line1, line2, TFT_SKYBLUE);
     } else {
@@ -163,12 +169,12 @@ static void handleAwayState(const String& currentLocation, time_t now) {
 static void handleHomeState(time_t now) {
   FlightEvent next;
   if (!findNextFlight(now, next)) {
-    displayMessage(String(USER_NAME) + " ist zuhause", "kein anstehender Flug", TFT_WHITE);
+    displayMessage(userName + " ist zuhause", "kein anstehender Flug", TFT_WHITE);
     return;
   }
   long days = (long)difftime(next.startUtc, now) / 86400;
   String whenStr = (days <= 0) ? "heute" : ("in " + String(days) + " Tagen");
-  String line1 = String(USER_NAME) + " muss " + whenStr;
+  String line1 = userName + " muss " + whenStr;
   String line2 = "nach " + next.arrIata + " fliegen";
   displayMessage(line1, line2, TFT_WHITE);
 }
