@@ -126,17 +126,17 @@ static void handleFlightStatus(const FlightEvent& f, time_t now) {
 
       String line1 = userName + " ist nach " + f.arrIata + " gestartet";
       String line2 = "noch " + String(buf) + " Std bis Landung";
-      displayMessage(line1, line2, TFT_GREEN);
+      displayMessage(line1, line2, COLOR_GREEN);
     } else {
       long elapsedMin = (long)difftime(now, f.startUtc) / 60;
       if (elapsedMin <= DELAYED_THRESHOLD_MIN) {
         String line1 = userName + "s Flug nach " + f.arrIata;
         String line2 = "ist pünktlich, startet gleich";
-        displayMessage(line1, line2, TFT_SKYBLUE);
+        displayMessage(line1, line2, COLOR_SKYBLUE);
       } else {
         String line1 = userName + "s Flug nach " + f.arrIata;
         String line2 = "ist verspätet (+" + String(elapsedMin) + " Min)";
-        displayMessage(line1, line2, TFT_RED);
+        displayMessage(line1, line2, COLOR_RED);
       }
     }
   }
@@ -151,7 +151,7 @@ static void handleAwayState(const String& currentLocation, time_t now) {
   if (awayShowLocation) {
     String line1 = userName + " ist gerade in " + currentLocation;
     String line2 = "und hat " + utcTimeString(now) + " Uhr (UTC)";
-    displayMessage(line1, line2, TFT_SKYBLUE);
+    displayMessage(line1, line2, COLOR_SKYBLUE);
   } else {
     FlightEvent ret;
     if (findNextReturnFlight(now, ret)) {
@@ -159,9 +159,9 @@ static void handleAwayState(const String& currentLocation, time_t now) {
       if (hours < 0) hours = 0;
       String line1 = userName + " fliegt in " + String(hours);
       String line2 = "Stunden zurück";
-      displayMessage(line1, line2, TFT_SKYBLUE);
+      displayMessage(line1, line2, COLOR_SKYBLUE);
     } else {
-      displayMessage("Rückflug noch", "nicht geplant", TFT_SKYBLUE);
+      displayMessage("Rückflug noch", "nicht geplant", COLOR_SKYBLUE);
     }
   }
 }
@@ -169,14 +169,14 @@ static void handleAwayState(const String& currentLocation, time_t now) {
 static void handleHomeState(time_t now) {
   FlightEvent next;
   if (!findNextFlight(now, next)) {
-    displayMessage(userName + " ist zuhause", "kein anstehender Flug", TFT_WHITE);
+    displayMessage(userName + " ist zuhause", "kein anstehender Flug", COLOR_WHITE);
     return;
   }
   long days = (long)difftime(next.startUtc, now) / 86400;
   String whenStr = (days <= 0) ? "heute" : ("in " + String(days) + " Tagen");
   String line1 = userName + " muss " + whenStr;
   String line2 = "nach " + next.arrIata + " fliegen";
-  displayMessage(line1, line2, TFT_WHITE);
+  displayMessage(line1, line2, COLOR_WHITE);
 }
 
 void setup() {
