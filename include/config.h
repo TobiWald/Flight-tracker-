@@ -5,7 +5,8 @@
 #define LCD_PIN_CS   21
 #define LCD_PIN_SCK  38
 #define LCD_PIN_MOSI 39
-#define LCD_PIN_RST  47
+#define LCD_PIN_RST  40
+#define LCD_PIN_BL   46
 #define LCD_WIDTH    172
 #define LCD_HEIGHT   320
 #define LCD_COL_OFFSET1 34
