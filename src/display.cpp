@@ -1,29 +1,33 @@
 #include "display.h"
-#include "lgfx_config.hpp"
+#include "config.h"
+#include <Arduino_GFX_Library.h>
 
-static LGFX lcd;
+static Arduino_DataBus *bus = new Arduino_ESP32SPI(
+    LCD_PIN_DC, LCD_PIN_CS, LCD_PIN_SCK, LCD_PIN_MOSI);
 
-#define COL_BG TFT_BLACK
-#define COL_TEXT TFT_WHITE
+static Arduino_GFX *gfx = new Arduino_ST7789(
+    bus, LCD_PIN_RST, 0 /* rotation */, false /* IPS */,
+    LCD_WIDTH, LCD_HEIGHT,
+    LCD_COL_OFFSET1, LCD_ROW_OFFSET1,
+    LCD_COL_OFFSET2, LCD_ROW_OFFSET2);
 
 void displayInit() {
-  lcd.init();
-  lcd.setRotation(0);
-  lcd.setBrightness(200);
-  lcd.fillScreen(COL_BG);
+  gfx->begin();
+  gfx->fillScreen(BLACK);
 }
 
 void displayWifiSetup() {
-  lcd.fillScreen(COL_BG);
-  lcd.setTextDatum(middle_center);
-  lcd.setTextColor(COL_TEXT);
-  lcd.setTextSize(2);
-  lcd.drawString("WLAN-Setup:", 120, 100);
-  lcd.drawString("FlightTracker-Setup", 120, 130);
+  gfx->fillScreen(BLACK);
+  gfx->setTextColor(WHITE);
+  gfx->setTextSize(2);
+  gfx->setCursor(10, 100);
+  gfx->println("WLAN-Setup:");
+  gfx->setCursor(10, 130);
+  gfx->println("FlightTracker-");
+  gfx->setCursor(10, 155);
+  gfx->println("Setup");
 }
 
-// Ersetzt UTF-8-codierte deutsche Umlaute durch ASCII, da der Standard-Font
-// von LovyanGFX keine Umlaute darstellen kann (zeigt sonst Zeichensalat)
 static String germanize(const String& in) {
   String out;
   out.reserve(in.length());
@@ -32,13 +36,13 @@ static String germanize(const String& in) {
     if (c == 0xC3 && i + 1 < (int)in.length()) {
       uint8_t c2 = (uint8_t)in[i + 1];
       switch (c2) {
-        case 0xA4: out += "ae"; i++; continue; // ä
-        case 0xB6: out += "oe"; i++; continue; // ö
-        case 0xBC: out += "ue"; i++; continue; // ü
-        case 0x84: out += "Ae"; i++; continue; // Ä
-        case 0x96: out += "Oe"; i++; continue; // Ö
-        case 0x9C: out += "Ue"; i++; continue; // Ü
-        case 0x9F: out += "ss"; i++; continue; // ß
+        case 0xA4: out += "ae"; i++; continue;
+        case 0xB6: out += "oe"; i++; continue;
+        case 0xBC: out += "ue"; i++; continue;
+        case 0x84: out += "Ae"; i++; continue;
+        case 0x96: out += "Oe"; i++; continue;
+        case 0x9C: out += "Ue"; i++; continue;
+        case 0x9F: out += "ss"; i++; continue;
         default: break;
       }
     }
@@ -47,20 +51,15 @@ static String germanize(const String& in) {
   return out;
 }
 
-// Bricht Text (nach Umlaut-Ersetzung) auf mehrere zentrierte Zeilen um,
-// damit nichts über den Rand des runden Displays hinausläuft
-static void drawWrappedCentered(const String& rawText, int yCenter, int lineHeight, uint32_t color) {
+static void drawWrapped(const String& rawText, int yStart, int lineHeight, uint32_t color) {
   String text = germanize(rawText);
+  gfx->setTextColor(color);
+  gfx->setTextSize(2);
+  const int charsPerLine = 13;
 
-  lcd.setTextDatum(middle_center);
-  lcd.setTextColor(color);
-  lcd.setTextSize(2);
-  const int charsPerLine = 15;
-
-  String lines[3];
-  int lineCount = 0;
   int start = 0;
-  while (start < (int)text.length() && lineCount < 3) {
+  int y = yStart;
+  while (start < (int)text.length()) {
     int end = start + charsPerLine;
     if (end >= (int)text.length()) {
       end = text.length();
@@ -68,24 +67,26 @@ static void drawWrappedCentered(const String& rawText, int yCenter, int lineHeig
       int lastSpace = text.lastIndexOf(' ', end);
       if (lastSpace > start) end = lastSpace;
     }
-    String seg = text.substring(start, end);
-    seg.trim();
-    lines[lineCount++] = seg;
-    start = end;
-  }
+    String lineStr = text.substring(start, end);
+    lineStr.trim();
 
-  int totalHeight = lineCount * lineHeight;
-  int y = yCenter - totalHeight / 2 + lineHeight / 2;
-  for (int i = 0; i < lineCount; i++) {
-    lcd.drawString(lines[i], 120, y);
+    int16_t x1, y1;
+    uint16_t w, h;
+    gfx->getTextBounds(lineStr, 0, 0, &x1, &y1, &w, &h);
+    int x = (LCD_WIDTH - w) / 2;
+    if (x < 0) x = 0;
+
+    gfx->setCursor(x, y);
+    gfx->println(lineStr);
     y += lineHeight;
+    start = end;
   }
 }
 
 void displayMessage(const String& line1, const String& line2, uint32_t color) {
-  lcd.fillScreen(COL_BG);
-  drawWrappedCentered(line1, 95, 22, color);
+  gfx->fillScreen(BLACK);
+  drawWrapped(line1, 110, 22, color);
   if (line2.length() > 0) {
-    drawWrappedCentered(line2, 155, 22, COL_TEXT);
+    drawWrapped(line2, 170, 22, WHITE);
   }
 }
