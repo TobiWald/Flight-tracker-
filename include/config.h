@@ -12,11 +12,15 @@
 // Name des WLAN-Setup-Access-Points beim ersten Start
 #define WIFI_AP_NAME "FlightTracker-Setup"
 
+// Persönlicher Name für die Anzeige (dieses Gerät ist nicht zum Teilen gedacht,
+// daher fest hier statt als Setup-Feld)
+#define USER_NAME "Tobi"
+
 // Zeitintervalle
 #define ROSTER_REFRESH_INTERVAL_MS   (15UL * 60UL * 1000UL)   // Dienstplan alle 15 Min neu laden
 #define ADSB_POLL_INTERVAL_ACTIVE_MS (60UL * 1000UL)          // Live-Status jede Minute im aktiven Fenster
-#define BOARDING_WINDOW_BEFORE_MIN   30   // ab wann vor Abflug "Boarding" angezeigt wird
-#define DELAYED_THRESHOLD_MIN        15   // ab wann "verspätet" statt "boarding" angezeigt wird
-#define LANDED_BUFFER_AFTER_MIN      20   // Minuten nach geplanter Ankunft, ab der "gelandet" angenommen wird
+#define AWAY_MESSAGE_SWITCH_MS       (5UL * 1000UL)           // Alternierende Anzeige alle 5s wechseln
+#define DELAYED_THRESHOLD_MIN        15   // Minuten nach geplantem Abflug, ab der "verspätet" statt "startet gleich" angezeigt wird
+#define LANDED_BUFFER_AFTER_MIN      20   // Minuten nach geplanter Ankunft, ab der der Flug als beendet gilt
 
 #define ADSB_API_HOST "https://api.adsb.fi/v2/callsign/"
