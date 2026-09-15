@@ -108,7 +108,18 @@ static void loadOrRequestConfig() {
 
   displayWifiSetup();
 
-  if (!wm.autoConnect(WIFI_AP_NAME)) {
+  bool needsSetup = (userName.length() == 0 || homeBase.length() == 0);
+
+  bool connected;
+  if (needsSetup) {
+    // Portal erzwingen, auch wenn WLAN schon gespeichert ist, damit die
+    // noch fehlenden Felder (Name/Heimatflughafen) ausgefüllt werden können
+    connected = wm.startConfigPortal(WIFI_AP_NAME);
+  } else {
+    connected = wm.autoConnect(WIFI_AP_NAME);
+  }
+
+  if (!connected) {
     ESP.restart();
   }
 
@@ -213,19 +224,23 @@ static void showScreenNextFlight(time_t now) {
   displayMessage(line1, line2, COLOR_WHITE);
 }
 
-static void showScreenCurrentLocation(const String& currentLocation, time_t now) {
+static void showScreenCurrentLocationTime(const String& currentLocation, time_t now) {
   String localT = localTimeAtAirport(currentLocation, now);
   String line1 = userName + " ist in " + currentLocation;
+  String line2 = "und hat gerade " + localT + " Uhr Ortszeit";
+  displayMessage(line1, line2, COLOR_SKYBLUE);
+}
 
+static void showScreenDepartureCountdown(time_t now) {
   FlightEvent next;
-  String line2;
-  if (findNextFlight(now, next)) {
-    long mins = (long)difftime(next.startUtc, now) / 60;
-    if (mins < 0) mins = 0;
-    line2 = localT + " Uhr, Abflug in " + String(mins / 60) + "h" + String(mins % 60) + "m";
-  } else {
-    line2 = localT + " Uhr Ortszeit";
+  if (!findNextFlight(now, next)) {
+    displayMessage("Kein Abflug", "geplant", COLOR_SKYBLUE);
+    return;
   }
+  long mins = (long)difftime(next.startUtc, now) / 60;
+  if (mins < 0) mins = 0;
+  String line1 = "Abflug in";
+  String line2 = String(mins / 60) + "h " + String(mins % 60) + "m";
   displayMessage(line1, line2, COLOR_SKYBLUE);
 }
 
@@ -276,15 +291,23 @@ void loop() {
     currentLocation = lastCompleted.arrIata;
   }
 
-  if (millis() - lastScreenSwitch > SCREEN_CYCLE_MS || lastScreenSwitch == 0) {
-    screenIndex = (screenIndex + 1) % 3;
+  bool switchNow = (millis() - lastScreenSwitch > SCREEN_CYCLE_MS || lastScreenSwitch == 0);
+  static unsigned long lastContentRefresh = 0;
+  bool refreshNow = (millis() - lastContentRefresh > 10000UL || lastContentRefresh == 0);
+
+  if (switchNow) {
+    screenIndex = (screenIndex + 1) % 4;
     lastScreenSwitch = millis();
   }
 
-  switch (screenIndex) {
-    case 0: showScreenNextFlight(now); break;
-    case 1: showScreenCurrentLocation(currentLocation, now); break;
-    case 2: showScreenFlightAfterNext(now); break;
+  if (switchNow || refreshNow) {
+    lastContentRefresh = millis();
+    switch (screenIndex) {
+      case 0: showScreenCurrentLocationTime(currentLocation, now); break;
+      case 1: showScreenDepartureCountdown(now); break;
+      case 2: showScreenNextFlight(now); break;
+      case 3: showScreenFlightAfterNext(now); break;
+    }
   }
 
   delay(500);
