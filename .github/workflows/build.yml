@@ -19,20 +19,20 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
-      - name: Build firmware
-        run: pio run
+      - name: Build merged firmware (bootloader + partitions + app)
+        run: pio run -t merge -e esp32-s3
 
       - name: Rename firmware
-        run: cp .pio/build/esp32-c3/firmware.bin ./FlightTracker.bin
+        run: cp .pio/build/esp32-s3/firmware-merged.bin ./FlightTrackerS3.bin
 
       - name: Upload to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: ./FlightTracker.bin
+          files: ./FlightTrackerS3.bin
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: ./FlightTracker.bin
+          path: ./FlightTrackerS3.bin
