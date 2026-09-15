@@ -12,10 +12,6 @@
 // Name des WLAN-Setup-Access-Points beim ersten Start
 #define WIFI_AP_NAME "FlightTracker-Setup"
 
-// Persönlicher Name für die Anzeige (dieses Gerät ist nicht zum Teilen gedacht,
-// daher fest hier statt als Setup-Feld)
-#define USER_NAME "Tobi"
-
 // Zeitintervalle
 #define ROSTER_REFRESH_INTERVAL_MS   (15UL * 60UL * 1000UL)   // Dienstplan alle 15 Min neu laden
 #define ADSB_POLL_INTERVAL_ACTIVE_MS (60UL * 1000UL)          // Live-Status jede Minute im aktiven Fenster
