@@ -1,8 +1,6 @@
 #pragma once
 #include <Arduino.h>
 
-// Eigene Farbkonstanten (RGB565), damit main.cpp nicht auf LovyanGFX-Header
-// zugreifen muss - die sind nur in display.cpp eingebunden
 #define COLOR_GREEN   0x07E0
 #define COLOR_SKYBLUE 0x867D
 #define COLOR_RED     0xF800
