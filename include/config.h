@@ -15,7 +15,7 @@
 // Zeitintervalle
 #define ROSTER_REFRESH_INTERVAL_MS   (15UL * 60UL * 1000UL)   // Dienstplan alle 15 Min neu laden
 #define ADSB_POLL_INTERVAL_ACTIVE_MS (60UL * 1000UL)          // Live-Status jede Minute im aktiven Fenster
-#define AWAY_MESSAGE_SWITCH_MS       (5UL * 1000UL)           // Alternierende Anzeige alle 5s wechseln
+#define SCREEN_CYCLE_MS               (5UL * 1000UL)         // Bildschirm alle 5s wechseln (3 Screens im Kreis)
 #define DELAYED_THRESHOLD_MIN        15   // Minuten nach geplantem Abflug, ab der "verspätet" statt "startet gleich" angezeigt wird
 #define LANDED_BUFFER_AFTER_MIN      20   // Minuten nach geplanter Ankunft, ab der der Flug als beendet gilt
 
