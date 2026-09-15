@@ -54,7 +54,6 @@ static String berlinTimeString(time_t utc, bool withDate) {
   return String(buf);
 }
 
-// Deutsches Datum (Berlin-Zeitzone), separat von der Uhrzeit
 static String berlinDateString(time_t utc) {
   setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
   tzset();
@@ -310,7 +309,7 @@ void loop() {
     currentLocation = lastCompleted.arrIata;
   }
 
-  bool switchNow = (millis() - lastScreenSwitch > SCREEN_CYCLE_MS || lastScreenSwitch == 0);
+  bool switchNow = (millis() - lastScreenSwitch > AWAY_MESSAGE_SWITCH_MS || lastScreenSwitch == 0);
   static unsigned long lastContentRefresh = 0;
   bool refreshNow = (millis() - lastContentRefresh > 10000UL || lastContentRefresh == 0);
 
