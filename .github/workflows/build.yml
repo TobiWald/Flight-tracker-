@@ -16,14 +16,24 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install PlatformIO
-        run: pip install platformio
+      - name: Install PlatformIO and esptool
+        run: |
+          pip install platformio
+          pip install esptool
 
       - name: Build firmware
         run: pio run -e esp32-s3
 
-      - name: Rename firmware
-        run: cp .pio/build/esp32-s3/firmware.bin ./FlightTrackerS3.bin
+      - name: Merge into single flashable binary
+        run: |
+          BOOT_APP0=$(find ~/.platformio/packages/framework-arduinoespressif32 -name "boot_app0.bin" | head -n 1)
+          python -m esptool --chip esp32s3 merge_bin \
+            -o FlightTrackerS3.bin \
+            --flash_mode dio --flash_freq 80m --flash_size 8MB \
+            0x0     .pio/build/esp32-s3/bootloader.bin \
+            0x8000  .pio/build/esp32-s3/partitions.bin \
+            0xe000  "$BOOT_APP0" \
+            0x10000 .pio/build/esp32-s3/firmware.bin
 
       - name: Upload to release
         if: github.event_name == 'release'
